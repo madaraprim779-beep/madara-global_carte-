@@ -1,0 +1,93 @@
+
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Clock3,
+  CircleCheck,
+  CircleX,
+} from "lucide-react";
+import type { Transaction } from "../services/transactions";
+
+interface TransactionItemProps {
+  transaction: Transaction;
+}
+
+function formatAmount(amount: number, currency: string) {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+function formatDate(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Date indisponible";
+  }
+
+  return new Intl.DateTimeFormat("fr-FR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
+export default function TransactionItem({
+  transaction,
+}: TransactionItemProps) {
+  const isCredit = transaction.direction === "credit";
+
+  const statusLabels = {
+    pending: "En attente",
+    succeeded: "Confirmée",
+    failed: "Échouée",
+  };
+
+  const StatusIcon =
+    transaction.status === "succeeded"
+      ? CircleCheck
+      : transaction.status === "failed"
+        ? CircleX
+        : Clock3;
+
+  return (
+    <article className="transaction-item">
+      <div
+        className={`transaction-icon ${
+          isCredit ? "transaction-credit" : "transaction-debit"
+        }`}
+      >
+        {isCredit ? (
+          <ArrowDownLeft size={21} />
+        ) : (
+          <ArrowUpRight size={21} />
+        )}
+      </div>
+
+      <div className="transaction-details">
+        <strong>{transaction.description}</strong>
+
+        <span>{formatDate(transaction.createdAt)}</span>
+
+        {transaction.reference && (
+          <small>Référence : {transaction.reference}</small>
+        )}
+
+        <span className={`transaction-status status-${transaction.status}`}>
+          <StatusIcon size={14} />
+          {statusLabels[transaction.status]}
+        </span>
+      </div>
+
+      <strong
+        className={`transaction-amount ${
+          isCredit ? "amount-credit" : "amount-debit"
+        }`}
+      >
+        {isCredit ? "+" : "−"}
+        {formatAmount(transaction.amount, transaction.currency)}
+      </strong>
+    </article>
+  );
+}
